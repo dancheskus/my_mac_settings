@@ -1,0 +1,44 @@
+# Remove "%" sign from oh my zsh on terminal startup
+unsetopt PROMPT_SP
+
+alias cls='clear'
+
+# git
+alias gi='git init'
+alias gc='git clone'
+alias gsc='git stash clear'
+alias grbF='git branch | grep -v "master" | xargs git branch -D' # force remove all branches except master
+alias grH='git rest --hard' # hard reset git branch in the middle of merging process
+
+# npm
+alias n='npm'
+alias ni='npm init -y'
+
+# yarn
+alias y='yarn'
+alias yi='yarn init -y'
+alias ya='yarn add'
+alias yad='yarn add --dev'
+alias yag='yarn global add'
+alias yr='yarn remove'
+alias yrg='yarn global remove'
+alias ys='yarn start'
+alias yt='yarn test'
+alias yrun='yarn run'
+alias ycra='yarn create react-app'
+alias ycrat='yarn create react-app $1 --template typescript'
+
+# docker-compose
+alias dc='docker-compose'
+alias dcu='docker-compose up'
+alias dcd='docker-compose down'
+alias dcb='docker-compose exec $1 bash'
+
+# common
+alias desk='cd ~/Desktop/'
+alias .='cd ..'
+alias ..='cd ../..'
+alias ...='cd ../../..'
+alias md='mkdir'
+alias b='cd backend'
+alias f='cd frontend'
