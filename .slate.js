@@ -1,109 +1,151 @@
-const pushRight = slate.operation('push', {
+const config = { windowHintsDuration: 3 }
+S.cfga(config)
+
+const pushRight = S.op('push', {
   direction: 'right',
   style: 'bar-resize:screenSizeX/2',
 });
 
-const pushRightThird = slate.operation('push', {
+const pushRightThird = S.op('push', {
   direction: 'right',
   style: 'bar-resize:screenSizeX/3',
 });
 
-const pushLeft = slate.operation('push', {
+const pushLeft = S.op('push', {
   direction: 'left',
   style: 'bar-resize:screenSizeX/2',
 });
 
-const pushLeftThird = slate.operation('push', {
+const pushLeftThird = S.op('push', {
   direction: 'left',
   style: 'bar-resize:screenSizeX/3',
 });
 
-const defaultPosition = {
+const fullScreen = S.op('move', {
   x: 'screenOriginX',
   y: 'screenOriginY',
   width: 'screenSizeX',
   height: 'screenSizeY',
-};
+});
 
-const fullscreen = slate.operation('move', defaultPosition);
-const move = options => slate.operation('move', { ...defaultPosition, ...options });
+const move = (win, options) => win.doOperation(fullScreen.dup(options));
 
-// CMD+ALT+UP Полноэкранный режим на конкретом экране
-slate.bind('up:cmd;alt', win => win.doOperation(fullscreen));
-
-// CMD+ALT+LEFT Левая половина на конкретом экране или правая - при переходе на предыдущий экран
-slate.bind('left:cmd;alt', win => {
-  const screen = slate.screen();
+const getScreenInfo = () => {
+  const screen = S.screen()
   const currentScreenId = screen.id();
   const { height: screenHeight, width: screenWidth } = screen.visibleRect();
 
+  return { currentScreenId, prevId: currentScreenId - 1, nextId: currentScreenId + 1, screenHeight, screenWidth }
+}
+
+const getWindowInfo = win => {
+  const {screenHeight, screenWidth, currentScreenId} = getScreenInfo();
   const topLeft = win.topLeft();
+  const displaysArr = [...Array(S.screenCount()).keys()].reverse();
   const { height: windowHeight, width: windowWidth } = win.size();
 
-  const displaysArr = [...Array(slate.screenCount()).keys()].reverse();
-  const snappedToLeftEdge = Math.abs(topLeft.x) === screenWidth * displaysArr[currentScreenId];
-  const fullHeightApp = Math.abs(windowHeight - screenHeight) < 5;
-  const windowIsHalfOrSmaller = windowWidth <= screenWidth / 2;
-  const windowIsHalf = windowWidth === screenWidth / 2;
+  return {
+    snappedToLeftEdge: Math.abs(topLeft.x) === screenWidth * displaysArr[currentScreenId],
+    snappedToRightEdge: Math.abs(topLeft.x) === windowWidth,
+    fullHeightApp: Math.abs(windowHeight - screenHeight) < 5,
+    windowIsHalfOrSmaller: windowWidth <= screenWidth / 2,
+    windowIsHalf: windowWidth === screenWidth / 2,
+  };
+}
+
+let snapTo = null;
+let timeout = null;
+
+slate.on("windowFocused", (_, win) => {
+  if (!snapTo) return;
+
+  move(win, {screen: getScreenInfo().currentScreenId})
+  if (snapTo === 'right') win.doOperation(pushRight)
+  if (snapTo === 'left') win.doOperation(pushLeft)
+});
+
+const showHint = (win, snapToPosition) => {
+  clearTimeout(timeout);
+  
+  timeout = setTimeout(() => {
+    win.doOperation(S.op('hint'));
+    snapTo = snapToPosition;
+
+    setTimeout(() => {
+      snapTo = null;
+    }, config.windowHintsDuration * 1000);
+  }, 400);
+}
+
+const moveToLeft = win => {
+  const {prevId, currentScreenId} = getScreenInfo();
+  const {snappedToLeftEdge, fullHeightApp, windowIsHalfOrSmaller, windowIsHalf} = getWindowInfo(win);
+
   const lastScreen = currentScreenId === 0;
 
-  if (windowIsHalfOrSmaller && fullHeightApp && snappedToLeftEdge && !lastScreen)
-    return win.doOperation(
-      move({ x: 'screenOriginX+screenSizeX/2', width: 'screenSizeX/2', screen: currentScreenId - 1 })
-    );
+  if (snappedToLeftEdge) {
+    if (lastScreen) {
+      if (windowIsHalf) return win.doOperation(pushLeftThird);
+    } else {
+      showHint(win, 'left');
+      
+      if (windowIsHalfOrSmaller && fullHeightApp)
+        return move(win, { x: 'screenOriginX+screenSizeX/2', width: 'screenSizeX/2', screen: prevId });
+    }
+  }
 
-  if (snappedToLeftEdge && lastScreen && windowIsHalf) return win.doOperation(pushLeftThird);
-
+  showHint(win, 'right');
   win.doOperation(pushLeft);
-});
 
-// CMD+ALT+RIGHT Правая половина на конкретом экране или левая - при переходе на следующий экран
-slate.bind('right:cmd;alt', win => {
-  const screen = slate.screen();
-  const currentScreenId = screen.id();
-  const { height: screenHeight, width: screenWidth } = screen.visibleRect();
+}
 
-  const topLeft = win.topLeft();
-  const { height: windowHeight, width: windowWidth } = win.size();
+const moveToRight = win => {
+  const {nextId, screenHeight, screenWidth, currentScreenId} = getScreenInfo();
+  const {snappedToRightEdge, fullHeightApp, windowIsHalfOrSmaller, windowIsHalf} = getWindowInfo(win);
 
-  const snappedToRightEdge = Math.abs(topLeft.x) === windowWidth;
-  const fullHeightApp = Math.abs(windowHeight - screenHeight) < 5;
-  const windowIsHalfOrSmaller = windowWidth <= screenWidth / 2;
-  const windowIsHalf = windowWidth === screenWidth / 2;
   const lastScreen = currentScreenId === 1;
 
-  if (snappedToRightEdge && lastScreen && windowIsHalf) return win.doOperation(pushRightThird);
+  if (snappedToRightEdge) {
 
-  if (windowIsHalfOrSmaller && fullHeightApp && snappedToRightEdge)
-    return win.doOperation(move({ width: 'screenSizeX/2', screen: currentScreenId + 1 }));
-
+    if (lastScreen && windowIsHalf) return win.doOperation(pushRightThird);
+  
+    if (windowIsHalfOrSmaller && fullHeightApp) {
+      showHint(win, 'right');
+      move(win, { width: 'screenSizeX/2', screen: nextId });
+      return;
+    };
+  }
+  
+  showHint(win, 'left');
   win.doOperation(pushRight);
-});
 
-// CMD+ALT+CTRL+LEFT Левая половина предыдущего экрана
-slate.bind('left:cmd;alt;ctrl', win => {
-  const currentScreenId = slate.screen().id();
+}
 
-  win.doOperation(move({ width: 'screenSizeX/2', screen: currentScreenId - 1 }));
-});
+const leftHalfOfLeftDisplay = win => {
+  move(win, { width: 'screenSizeX/2', screen: getScreenInfo().prevId });
+};
 
-// CMD+ALT+CTRL+RIGHT Правая половина следующего экрана
-slate.bind('right:cmd;alt;ctrl', win => {
-  const currentScreenId = slate.screen().id();
+const rightHalfOfRightDisplay = win => {
+  move(win, { x: 'screenOriginX+screenSizeX/2', width: 'screenSizeX/2', screen: getScreenInfo().nextId });
+}
 
-  win.doOperation(move({ x: 'screenOriginX+screenSizeX/2', width: 'screenSizeX/2', screen: currentScreenId + 1 }));
-});
+const moveToRightDisplayFullscreen = win => move(win, { screen: getScreenInfo().nextId });
 
-// CMD+CTRL+RIGHT Полноэкранный режим на следующем экране
-slate.bind('right:cmd;ctrl', win => {
-  const currentScreenId = slate.screen().id();
+const moveToLeftDisplayFullscreen = win => move(win, { screen: getScreenInfo().prevId });
 
-  win.doOperation(move({ screen: currentScreenId + 1 }));
-});
-
-// CMD+CTRL+LEFT Полноэкранный режим на предыдущем экране
-slate.bind('left:cmd;ctrl', win => {
-  const currentScreenId = slate.screen().id();
-
-  win.doOperation(move({ screen: currentScreenId - 1 }));
-});
+S.bnda({
+  // CMD+ALT+UP Полноэкранный режим на конкретом экране
+  'up:cmd;alt': fullScreen,
+  // CMD+ALT+LEFT Левая половина на конкретом экране или правая - при переходе на предыдущий экран
+  'left:cmd;alt': moveToLeft,
+  // CMD+ALT+RIGHT Правая половина на конкретом экране или левая - при переходе на следующий экран
+  'right:cmd;alt': moveToRight,
+  // CMD+ALT+CTRL+LEFT Левая половина предыдущего экрана
+  'left:cmd;alt;ctrl': leftHalfOfLeftDisplay,
+  // CMD+ALT+CTRL+RIGHT Правая половина следующего экрана
+  'right:cmd;alt;ctrl': rightHalfOfRightDisplay,
+  // CMD+CTRL+RIGHT Полноэкранный режим на следующем экране
+  'right:cmd;ctrl': moveToRightDisplayFullscreen,
+  // CMD+CTRL+LEFT Полноэкранный режим на предыдущем экране
+  'left:cmd;ctrl': moveToLeftDisplayFullscreen,
+})
