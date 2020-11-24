@@ -74,7 +74,7 @@ const showHint = (win, snapToPosition) => {
     setTimeout(() => {
       snapTo = null;
     }, config.windowHintsDuration * 1000);
-  }, 400);
+  }, 1000);
 }
 
 const moveToLeft = win => {
