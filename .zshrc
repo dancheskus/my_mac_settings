@@ -28,11 +28,13 @@ alias yrun='yarn run'
 alias ycra='yarn create react-app'
 alias ycrat='yarn create react-app $1 --template typescript'
 
-# docker-compose
+# docker
 alias dc='docker-compose'
 alias dcu='docker-compose up'
 alias dcd='docker-compose down'
-alias dcb='docker-compose exec $1 bash'
+function dsh(){
+  docker exec -ti $1 /bin/sh
+}
 
 # common
 alias desk='cd ~/Desktop/'
