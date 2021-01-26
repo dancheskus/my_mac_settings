@@ -1,7 +1,3 @@
-export ZSH="/Users/daniel/.oh-my-zsh"
-
-ZSH_THEME="robbyrussell"
-
 # ------------------------------------------ MY CONFIG ----------------------------------------------------
 plugins=(git alias-tips zsh-autosuggestions)
 
