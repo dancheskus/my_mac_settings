@@ -1,5 +1,8 @@
+# ------------------------------------------ MY CONFIG ----------------------------------------------------
 # Remove "%" sign from oh my zsh on terminal startup
 unsetopt PROMPT_SP
+
+plugins=(git alias-tips zsh-autosuggestions)
 
 alias cls='clear'
 
@@ -30,11 +33,11 @@ alias ycrat='yarn create react-app $1 --template typescript'
 
 # docker
 alias dc='docker-compose'
-alias dcu='docker-compose up'
-alias dcd='docker-compose down'
-function dsh(){
-  docker exec -ti $1 /bin/sh
-}
+alias dcu='dc up'
+alias dcd='dc down'
+function dcex() {dc exec $1}
+function dcsh() {dc exec $1 /bin/sh}
+function dconf() {dc -f docker-compose.yml -f $1 up $2}
 
 # common
 alias desk='cd ~/Desktop/'
