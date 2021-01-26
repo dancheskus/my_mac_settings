@@ -1,4 +1,3 @@
-# ------------------------------------------ MY CONFIG ----------------------------------------------------
 plugins=(git alias-tips zsh-autosuggestions)
 
 source $ZSH/oh-my-zsh.sh
