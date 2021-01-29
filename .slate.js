@@ -136,16 +136,16 @@ const moveToLeftDisplayFullscreen = win => move(win, { screen: getScreenInfo().p
 S.bnda({
   // CMD+ALT+UP Полноэкранный режим на конкретом экране
   'up:cmd;alt': fullScreen,
-  // CMD+ALT+LEFT Левая половина на конкретом экране или правая - при переходе на предыдущий экран
-  'left:cmd;alt': moveToLeft,
-  // CMD+ALT+RIGHT Правая половина на конкретом экране или левая - при переходе на следующий экран
-  'right:cmd;alt': moveToRight,
+  // CMD+ALT+RIGHT Полноэкранный режим на следующем экране
+  'right:cmd;alt': moveToRightDisplayFullscreen,
+  // CMD+ALT+LEFT Полноэкранный режим на предыдущем экране
+  'left:cmd;alt': moveToLeftDisplayFullscreen,
+  // CMD+CTRL+LEFT Левая половина на конкретом экране или правая - при переходе на предыдущий экран
+  'left:cmd;ctrl': moveToLeft,
+  // CMD+CTRL+RIGHT Правая половина на конкретом экране или левая - при переходе на следующий экран
+  'right:cmd;ctrl': moveToRight,
   // CMD+ALT+CTRL+LEFT Левая половина предыдущего экрана
   'left:cmd;alt;ctrl': leftHalfOfLeftDisplay,
   // CMD+ALT+CTRL+RIGHT Правая половина следующего экрана
-  'right:cmd;alt;ctrl': rightHalfOfRightDisplay,
-  // CMD+CTRL+RIGHT Полноэкранный режим на следующем экране
-  'right:cmd;ctrl': moveToRightDisplayFullscreen,
-  // CMD+CTRL+LEFT Полноэкранный режим на предыдущем экране
-  'left:cmd;ctrl': moveToLeftDisplayFullscreen,
+  'right:cmd;alt;ctrl': rightHalfOfRightDisplay,  
 })
