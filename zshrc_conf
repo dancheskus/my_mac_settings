@@ -1,4 +1,4 @@
-plugins=(git alias-tips zsh-autosuggestions)
+plugins=(git alias-tips zsh-autosuggestions zsh-syntax-highlighting)
 
 source $ZSH/oh-my-zsh.sh
 
