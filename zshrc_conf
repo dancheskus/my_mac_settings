@@ -13,6 +13,8 @@ alias gc='git clone'
 alias gsc='git stash clear'
 alias grbF='git branch | grep -v "master" | xargs git branch -D' # force remove all branches except master
 alias grmlcom='git reset --hard HEAD~1' # remove last local commit
+alias save-patch='git add . && git diff --staged > gitPatch && git reset &> /dev/null'
+alias apply-patch='git apply gitPatch && rm gitPatch'
 
 # npm
 alias n='npm'
